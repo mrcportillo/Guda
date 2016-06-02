@@ -12,3 +12,4 @@ TEMPLATE = app
 SOURCES += main.cpp
 #INCLUDEPATH += "/usr/include/opencv"
 INCLUDEPATH += "/home/mrc/opencv/opencv-3.1.0/include/opencv"
+LIBS += `pkg-config opencv --cflags --libs`
