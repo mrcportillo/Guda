@@ -6,9 +6,9 @@
 
 int main()
 {
-    char name0[] = "/home/mrc/test11/img/1.jpg";
-    char name1[] = "/home/mrc/test11/img/resized.jpg";
-    char name2[] = "/home/mrc/test11/img/corte.jpg";
+    char name0[] = "/home/mrc/ProyectosQt/Guda/Ejercicio1/Ejercicio1/img/1.jpg";
+    char name1[] = "/home/mrc/ProyectosQt/Guda/Ejercicio1/Ejercicio1/img/resized.jpg";
+    char name2[] = "/home/mrc/ProyectosQt/Guda/Ejercicio1/Ejercicio1/img/corte.jpg";
     float dx = 0;
     float dy = 0;
     int detax = 0;
@@ -36,7 +36,7 @@ int main()
     cvNamedWindow("Corte", CV_WINDOW_AUTOSIZE);
     cvShowImage("Corte", resized);
     IplImage* temp = cvCloneImage(resized);
-    cvSaveImage("name2", temp);
+    cvSaveImage(name2, temp);
     cvResetImageROI(resized);
 
     cvWaitKey(0);
