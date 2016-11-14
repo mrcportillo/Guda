@@ -28,6 +28,7 @@ IplImage *orient = 0; // orientation
 IplImage *mask = 0; // valid orientation mask
 IplImage *segmask = 0; // motion segmentation map
 CvMemStorage* storage = 0; // temporary storage
+CvMemStorage* storageHaart = 0; // temporary storage
 
 
 
@@ -58,7 +59,7 @@ int main(void) {
     {
         fprintf( stderr,"ERROR: Could not load classifier cascade\n" );
     }
-    storage = cvCreateMemStorage(0);
+    storageHaart = cvCreateMemStorage(0);
 
     /*
     if( !input_name || (isdigit(input_name[0]) && input_name[1] == '\0') )
@@ -74,6 +75,7 @@ int main(void) {
 
     cvNamedWindow( "Detecta", 1 );
     cvNamedWindow( "bluedetect", 1 );
+    cvNamedWindow( "onlyhaart", 1 );
 
     if (capture) {
         for(;;) {
@@ -96,7 +98,7 @@ int main(void) {
             }
 
 
-            if( cvWaitKey( 500 ) >= 0 ){
+            if( cvWaitKey( 10 ) >= 0 ){
                 break;
             }
             //copia para trabajar con un solo frame
@@ -137,6 +139,7 @@ int main(void) {
     }
     cvDestroyWindow("Detecta");
     cvDestroyWindow("bluedetect");
+    cvDestroyWindow("onlyhaart");
 }
 
 
@@ -152,18 +155,6 @@ bool analizarMhi( IplImage* img, IplImage* dst, int diff_threshold, CvRect rect 
     CvPoint center;
     double magnitude;
     CvScalar color;
-
-
-    cvNamedWindow( "b1", 1 );
-    cvNamedWindow( "b2", 1 );
-    cvNamedWindow( "b3", 1 );
-    cvNamedWindow( "b4", 1 );
-
-    cvShowImage( "b1", buf[0] );
-    cvShowImage( "b2", buf[1] );
-    cvShowImage( "b3", buf[2] );
-    cvShowImage( "b4", buf[3] );
-
 
     cvCvtColor( img, buf[last], CV_BGR2GRAY ); // convert frame to grayscale
 
@@ -201,13 +192,13 @@ bool analizarMhi( IplImage* img, IplImage* dst, int diff_threshold, CvRect rect 
     comp_rect = cvRect( 0, 0, img->width, img->height );
     color = CV_RGB(255,255,255);
     magnitude = 100;
-    while (result.area() < 1 & i < seq->total) {
+    while (result.area() < 10 & i < seq->total) {
 
             comp_rect = ((CvConnectedComp*)cvGetSeqElem( seq, i ))->rect;
-//            if( comp_rect.width + comp_rect.height < 100 ) {// reject very small components
-//                i++;
-//                continue;
-//            }
+            if( comp_rect.width + comp_rect.height < 100 ) {// reject very small components
+                i++;
+                continue;
+            }
             color = CV_RGB(255,0,0);
             magnitude = 30;
 
@@ -239,7 +230,7 @@ bool analizarMhi( IplImage* img, IplImage* dst, int diff_threshold, CvRect rect 
         i++;
     }
 
-    if (result.area() > 1) {
+    if (result.area() > 10) {
         return true;
     } else {
         return false;
@@ -327,14 +318,17 @@ void detect_and_draw( IplImage* img, IplImage* imgAnterior ) {
                      8, 1 );
     int i;
 
+    IplImage* onlyhaart = cvCreateImage(cvGetSize(img), img->depth, img->nChannels);
+    cvCopy(img, onlyhaart);
+
     cvCvtColor( img, gray, CV_BGR2GRAY );
     cvResize( gray, small_img, CV_INTER_LINEAR );
     cvEqualizeHist( small_img, small_img );
-    cvClearMemStorage( storage );
+    cvClearMemStorage( storageHaart );
 
     if(cascade) {
         double t = (double)cvGetTickCount();
-        CvSeq* faces = cvHaarDetectObjects(small_img, cascade, storage,
+        CvSeq* faces = cvHaarDetectObjects(small_img, cascade, storageHaart,
                                             1.1, 2, 0/*CV_HAAR_DO_CANNY_PRUNING*/,
                                             cvSize(30, 30) );
         t = (double)cvGetTickCount() - t;
@@ -344,7 +338,7 @@ void detect_and_draw( IplImage* img, IplImage* imgAnterior ) {
             CvRect rect = cvRect(r->x, r->y, r->width, r->height);
 
             if ((rect.height < (img->height + 1)) & (rect.width < (img->width + 1))
-                    & analizarMhi(img, imgAnterior, 10, rect)) {
+                    & analizarMhi(img, imgAnterior, 30, rect)) {
                 printf( "detection time = %gms\n", t/((double)cvGetTickFrequency()*100.) );
                 CvPoint center;
                 int radius;
@@ -353,6 +347,12 @@ void detect_and_draw( IplImage* img, IplImage* imgAnterior ) {
                 radius = cvRound((rect.width + rect.height)*0.25*scale);
                 cvCircle( img, center, radius, colors[i%8], 3, 8, 0 );
             }
+            CvPoint center;
+            int radius;
+            center.x = cvRound((rect.x + rect.width*0.5)*scale);
+            center.y = cvRound((rect.y + rect.height*0.5)*scale);
+            radius = cvRound((rect.width + rect.height)*0.25*scale);
+            cvCircle( onlyhaart, center, radius, colors[i%8], 3, 8, 0 );
 
 //            if (analizarFlujo(img, imgAnterior, r)) {
 //                CvPoint center;
@@ -365,6 +365,7 @@ void detect_and_draw( IplImage* img, IplImage* imgAnterior ) {
         }
     }
     cvShowImage( "Detecta", img );
+    cvShowImage( "onlyhaart", onlyhaart);
     cvShowImage("bluedetect", imgAnterior);
     cvReleaseImage( &gray );
     cvReleaseImage( &small_img );
