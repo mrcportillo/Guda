@@ -10,62 +10,56 @@
 #include <time.h>
 #include <ctype.h>
 
-IplImage *image = 0, *grey = 0, *prev_grey = 0, *pyramid = 0, *prev_pyramid = 0, *swap_temp,*swap_temp1,*swap_temp2;
-int win_size = 10;
-const int MAX_COUNT = 500;
-CvPoint2D32f* points[2] = {0,0}, *swap_points;
-CvPoint2D32f* points1[2] = {0,0}, *swap_points1;
-CvPoint2D32f* points2[2] = {0,0}, *swap_points2;
-char* status = 0;
-int count = 0;
-int need_to_init = 0;
-int night_mode = 0;
-int flags = 0;
-int add_remove_pt = 0;
-int contador=0;
-int detecta1=0;
-int detecta2=0;
-int x=0;
-int y=0;
-int valor=0;
-double quality = 0.01;
-double min_distance = 10;
-double dx=0.0;
-double dy=0.0;
-double ds=0.0;
-double distancia=0.0;
-double distancia1=0.0;
+class proceso {
+    IplImage *image = 0, *grey = 0, *prev_grey = 0, *pyramid = 0, *prev_pyramid = 0, *swap_temp;
+    int win_size = 10;
+    const int MAX_COUNT = 500;
+    CvPoint2D32f* points[2] = {0,0}, *swap_points;
+    CvPoint2D32f* points1[2] = {0,0};
+    CvPoint2D32f* points2[2] = {0,0};
+    char* status = 0;
+    int count = 0;
+    bool need_to_init = false;
+    int flags = 0;
+    int contador=0;
+    int detecta1=0;
+    int detecta2=0;
+    int x=0;
+    int y=0;
+    int valor=0;
+    double quality = 0.01;
+    double min_distance = 10;
+    double dx=0.0;
+    double dy=0.0;
+    double ds=0.0;
+    double distancia=0.0;
 
-///////////////////////////////////////////////////////////////////////////////////////
-static CvMemStorage* storage = 0;
-static CvHaarClassifierCascade* cascade = 0;
-CvPoint center;
-CvRect* r;
-CvSeq* faces;
-CvCapture* capture = 0;
-IplImage *frame, *frame_copy = 0;
-void detect_and_draw( IplImage* image );
-const char* cascade_name ="/home/mrc/ProyectosQt/Guda/utilFiles/haartTraining/cars.xml";
-const char* aviFile ="/home/mrc/ProyectosQt/Guda/utilFiles/video/ca3.avi";
-
-double t=0.0;
-static CvScalar colors[] = {
-        {{0,0,255}},
-        {{0,128,255}},
-        {{0,255,255}},
-        {{0,255,0}},
-        {{255,128,0}},
-        {{255,255,0}},
-        {{255,0,0}},
-        {{255,0,255}}
-    };
+    ///////////////////////////////////////////////////////////////////////////////////////
+    CvMemStorage* storage = 0;
+    CvHaarClassifierCascade* cascade = 0;
+    CvPoint center;
+    CvRect* r;
+    CvSeq* faces;
+    CvCapture* capture = 0;
+    IplImage *frame, *frame_copy = 0;
+    const char* cascade_name ="/home/mrc/ProyectosQt/Guda/utilFiles/haartTraining/cars.xml";
+    const char* aviFile ="/home/mrc/ProyectosQt/Guda/utilFiles/video/ca3.avi";
 
     double scale = 1.3;
     int i,ii,k,c;
     int radius;
 
-
-int main() {
+public:int principal() {
+    CvScalar colores[] = {
+                {{0,0,255}},
+                {{0,128,255}},
+                {{0,255,255}},
+                {{0,255,0}},
+                {{255,128,0}},
+                {{255,255,0}},
+                {{255,0,0}},
+                {{255,0,255}}
+            };
     cascade = (CvHaarClassifierCascade*)cvLoad( cascade_name, 0, 0, 0 );
     storage = cvCreateMemStorage(0);
     capture = cvCaptureFromAVI(aviFile);
@@ -81,7 +75,7 @@ int main() {
     points2[1] = (CvPoint2D32f*)cvAlloc(MAX_COUNT*sizeof(points2[0][0]));
     status = (char*)cvAlloc(MAX_COUNT);
 //////////////////////////////////////////////////////////////////
-    while(1) {
+//    while(1) {
         frame = cvQueryFrame( capture );
         if( !image ) {
             image = cvCreateImage( cvGetSize(frame), 8, 3 );
@@ -105,7 +99,7 @@ int main() {
             cvFindCornerSubPix( grey, points[1], count,cvSize(win_size,win_size),
                     cvSize(-1,-1),cvTermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS,20,0.03));cvReleaseImage( &eig );
             cvReleaseImage( &temp );
-            add_remove_pt = 0;
+            cvReleaseImage( &eig );
         } else if( count > 0 ) {
             cvCalcOpticalFlowPyrLK( prev_grey, grey, prev_pyramid, pyramid, points[0], points[1], count,
                     cvSize(win_size,win_size), 3, status, 0, cvTermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS,20,0.03), flags );
@@ -131,7 +125,7 @@ int main() {
         CV_SWAP( prev_grey, grey, swap_temp );
         CV_SWAP( prev_pyramid, pyramid, swap_temp );
         CV_SWAP( points[0], points[1], swap_points );
-        need_to_init = 0;
+        need_to_init = false;
 
         ////////////////////////////////////////////////////////
         IplImage* gray = cvCreateImage( cvSize(frame->width,frame->height), 8, 1 );
@@ -146,13 +140,13 @@ int main() {
                 center.x = cvRound((r->x + r->width*0.5)*scale);
                 center.y = cvRound((r->y + r->height*0.5)*scale);
                 radius = cvRound((r->width + r->height)*0.25*scale);
-                cvCircle( image, center, radius, colors[i%8], 3, 8, 0 );
+                cvCircle( image, center, radius, colores[i%8], 3, 8, 0 );
                 for(i=0;i<valor;i++) {
                     x=points2[1][i].x-center.x;
                     y=points2[1][i].y-center.y;
                     ds=pow((x*x+y*y),0.5);
                     if(ds<10.0) {
-                        cvCircle( frame, center, radius, colors[i%8], 3, 10, 0 );
+                        cvCircle( frame, center, radius, colores[i%8], 3, 10, 0 );
                         //cvRectangle(frame,center.x,center.y,cvRound((r->width*0.5)*scale),
                         //cvRound((r->height*0.5)*scale),cvScalar(255,0,0));
                     }
@@ -169,10 +163,10 @@ int main() {
             c = cvWaitKey(1);
             contador++;
 
-            if( (char)c == 27 )break;
+//            if( (char)c == 27 )break;
 
             if(contador==5) {
-                need_to_init = 1;
+                need_to_init = true;
                 detecta1=1;
                 detecta2=0;
             }
@@ -183,9 +177,11 @@ int main() {
             if(contador==8) {
                 contador=0;
             }
-    }
+//    }
+
     cvReleaseImage( &frame_copy );
     cvReleaseCapture( &capture );
     cvDestroyWindow("Resultado");
     cvDestroyWindow("Movimiento");
 }
+};
