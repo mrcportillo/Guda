@@ -1,8 +1,6 @@
-#include <hayai/hayai.hpp>
+#include <proceso.cpp>
 
 int main() {
-    hayai::ConsoleOutputter consoleOutputter;
-    hayai::Benchmarker::AddOutputter(consoleOutputter);
-    hayai::Benchmarker::RunAllTests();
+    proceso().principal();
     return 0;
 }

@@ -42,12 +42,15 @@ class proceso {
     CvSeq* faces;
     CvCapture* capture = 0;
     IplImage *frame, *frame_copy = 0;
-    const char* cascade_name ="/home/mrc/ProyectosQt/Guda/utilFiles/haartTraining/cars.xml";
+    const char* cascade_name ="/home/mrc/ProyectosQt/Guda/utilFiles/haartTraining/carsPinchi.xml";
     const char* aviFile ="/home/mrc/ProyectosQt/Guda/utilFiles/video/ca3.avi";
 
     double scale = 1.3;
     int i,ii,k,c;
     int radius;
+
+    cv::vector <cv::Rect> vectorRect;
+    cv::Rect rectCopy;
 
 public:int principal() {
     CvScalar colores[] = {
@@ -75,7 +78,7 @@ public:int principal() {
     points2[1] = (CvPoint2D32f*)cvAlloc(MAX_COUNT*sizeof(points2[0][0]));
     status = (char*)cvAlloc(MAX_COUNT);
 //////////////////////////////////////////////////////////////////
-//    while(1) {
+    while(1) {
         frame = cvQueryFrame( capture );
         if( !image ) {
             image = cvCreateImage( cvGetSize(frame), 8, 3 );
@@ -135,20 +138,32 @@ public:int principal() {
         cvEqualizeHist( small_img, small_img );
         cvClearMemStorage( storage );
         faces = cvHaarDetectObjects( small_img, cascade, storage,1.1, 2, 0,cvSize(30, 30) );
-            for( ii = 0; ii < (faces ? faces->total : 0); ii++ ) {
-                r = (CvRect*)cvGetSeqElem( faces, ii );
-                center.x = cvRound((r->x + r->width*0.5)*scale);
-                center.y = cvRound((r->y + r->height*0.5)*scale);
-                radius = cvRound((r->width + r->height)*0.25*scale);
+
+        for (int id = 0; id < faces->total; id++) {
+            r = (CvRect*)cvGetSeqElem( faces, id);
+            rectCopy.height = r->height;
+            rectCopy.width = r->width;
+            rectCopy.x = r->x;
+            rectCopy.y = r->y;
+            vectorRect.push_back(rectCopy);
+            vectorRect.push_back(rectCopy);
+        }
+        //vectorRect: array de rects, minimo numero de rectangulos en un cluster resultante,
+        //criterio para eliminar rects repetidos
+        cv::groupRectangles(vectorRect, 1, 0.8);
+
+            for( ii = 0; ii < vectorRect.size(); ii++ ) {
+                rectCopy = vectorRect[ii];
+                center.x = cvRound((rectCopy.x + rectCopy.width*0.5)*scale);
+                center.y = cvRound((rectCopy.y + rectCopy.height*0.5)*scale);
+                radius = cvRound((rectCopy.width + rectCopy.height)*0.25*scale);
                 cvCircle( image, center, radius, colores[i%8], 3, 8, 0 );
                 for(i=0;i<valor;i++) {
                     x=points2[1][i].x-center.x;
                     y=points2[1][i].y-center.y;
                     ds=pow((x*x+y*y),0.5);
-                    if(ds<10.0) {
+                    if(ds < radius) {
                         cvCircle( frame, center, radius, colores[i%8], 3, 10, 0 );
-                        //cvRectangle(frame,center.x,center.y,cvRound((r->width*0.5)*scale),
-                        //cvRound((r->height*0.5)*scale),cvScalar(255,0,0));
                     }
                     printf("%0.2f",(float)ds);
                     printf("\n");
@@ -160,10 +175,10 @@ public:int principal() {
             ///////////////////////////////////////////////////////
             cvShowImage( "Resultado", frame);
             cvShowImage( "Movimiento", image);
-            c = cvWaitKey(1);
+            c = cvWaitKey(100);
             contador++;
 
-//            if( (char)c == 27 )break;
+            if( (char)c == 27 )break;
 
             if(contador==5) {
                 need_to_init = true;
@@ -177,7 +192,7 @@ public:int principal() {
             if(contador==8) {
                 contador=0;
             }
-//    }
+    }
 
     cvReleaseImage( &frame_copy );
     cvReleaseCapture( &capture );
