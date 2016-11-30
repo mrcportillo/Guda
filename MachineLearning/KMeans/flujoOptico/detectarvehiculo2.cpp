@@ -14,29 +14,27 @@ using namespace std;
 
 const int MAX_CORNERS = 100;
 const double MHI_DURATION = 2;
-const int PUNTOS_CARACTERISTICOS = 10, CLUSTERS_NUMBERS = 2;
+const int PUNTOS_CARACTERISTICOS = 50, CLUSTERS_NUMBERS = 2;
 
-void DetectarVehiculo2::clasificar(vector<Point> puntosCaracteristicos){
+Mat DetectarVehiculo2::clasificar(vector<Point> puntosCaracteristicos){
     int flags = KMEANS_RANDOM_CENTERS;
     Mat centers, labels;
 
-    if (puntosCaracteristicos.size() > PUNTOS_CARACTERISTICOS) {
-        Mat point = Mat(10, 2, CV_32F, Scalar(0));
-        for (int i =0; i < puntosCaracteristicos.size(); i++) {
-            float* PointX = point.ptr<float> (i,0);
-            *PointX = puntosCaracteristicos[i].x;
-            float* PointY = point.ptr<float> (i,1);
-            *PointY = puntosCaracteristicos[i].y;
-        }
-        kmeans(point, CLUSTERS_NUMBERS, labels,
-            TermCriteria(TermCriteria::EPS+TermCriteria::COUNT, 10, 1.0)
-               , 3, flags, centers);
-        for (int i=0; i <= 19; i++) {
-            cout << "punto " << point.at<float>(i,0) << " "
-                 << point.at<float>(i,1) << " "<<labels.at<int>(i) << "\n";
-        }
+    Mat point = Mat(100, 2, CV_32F, Scalar(0));
+    for (int i =0; i < puntosCaracteristicos.size(); i++) {
+        float* PointX = point.ptr<float> (i,0);
+        *PointX = puntosCaracteristicos[i].x;
+        float* PointY = point.ptr<float> (i,1);
+        *PointY = puntosCaracteristicos[i].y;
     }
-    printf("sa");
+    kmeans(point, CLUSTERS_NUMBERS, labels,
+        TermCriteria(TermCriteria::EPS+TermCriteria::COUNT, 10, 1.0)
+           , 3, flags, centers);
+    for (int i=0; i <= 19; i++) {
+        cout << "punto " << point.at<float>(i,0) << " "
+             << point.at<float>(i,1) << " "<<labels.at<int>(i) << "\n";
+    }
+    return labels;
 
 }
 
@@ -70,8 +68,7 @@ void DetectarVehiculo2::comenzar() {
     int a=1;
     int px=0;
     int py=0;
-    CvPoint p0;
-    CvPoint p1;
+    CvPoint p0, p1;
     cvNamedWindow("Image A",1);
     cvNamedWindow("Image B",1);
     IplImage* pyrA ;
@@ -82,8 +79,9 @@ void DetectarVehiculo2::comenzar() {
     capture = cvCaptureFromCAM(0);
     //capture1 = cvCaptureFromCAM(1);
 
-    CvMat matrizEntrada;
+    Mat matrizDeSalida;
     std::vector<Point> vec;
+    std::vector<CvPoint> vectorDePuntos;
     float anguloPuntos;
 
     while(a)
@@ -97,7 +95,7 @@ void DetectarVehiculo2::comenzar() {
         imgA1= cvCreateImage(cvGetSize(imgC1), imgC1->depth, imgC1->nChannels);
         cvCopy(imgC1, imgA1, NULL);
 
-        cvWaitKey(100);
+        cvWaitKey(500);
 
         imgB1 = cvQueryFrame( capture );
 
@@ -136,7 +134,7 @@ void DetectarVehiculo2::comenzar() {
 
 
         vec.clear();
-
+        vectorDePuntos.clear();
         for( int i=0; i<corner_count; i++ )
         {
             if( features_found[i]==0|| feature_errors[i]>100 ) {continue;}
@@ -146,15 +144,30 @@ void DetectarVehiculo2::comenzar() {
             if(dx>5 && dx<50){
                 p0 = cvPoint(cvRound( cornersA[i].x ),cvRound( cornersA[i].y));
                 p1 = cvPoint(cvRound( cornersB[i].x ),cvRound( cornersB[i].y));
-                cvLine( imgB1, p0, p1, CV_RGB(255,0,0),5 );
-
+//                cvLine( imgB1, p0, p1, CV_RGB(255,0,0),5 );
+                vectorDePuntos.push_back(p0);
+                vectorDePuntos.push_back(p1);
 
                 anguloPuntos = atan2(p0.y - p1.y, p0.x - p1.x) * 180 / 3,14;
                 if (anguloPuntos<0) {
                     anguloPuntos = 360 + anguloPuntos;
                 }
                 vec.push_back(Point(dx,anguloPuntos));
-                clasificar(vec);
+                if (vec.size() > PUNTOS_CARACTERISTICOS) {
+                    matrizDeSalida = clasificar(vec);
+                    int i = 0, j = 0;
+
+                    while (i < matrizDeSalida.rows) {
+                        int clusterId = matrizDeSalida.at<int>(i);;
+                        while (clusterId = matrizDeSalida.at<int>(i)) {
+                            cvLine( imgB1, vectorDePuntos[j], vectorDePuntos[j+1]
+                                    , CV_RGB(10*i, 10*i, 10*j),5 );
+                            i = i + 1;
+                            j = j + 2;
+                        }
+                    }
+                }
+
 
             }
             /*if(dx>20){

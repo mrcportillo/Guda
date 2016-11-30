@@ -1,8 +1,8 @@
-#include <QCoreApplication>
+#include <hayai/hayai.hpp>
 
-int main(int argc, char *argv[])
-{
-    QCoreApplication a(argc, argv);
-
-    return a.exec();
+int main() {
+    hayai::ConsoleOutputter consoleOutputter;
+    hayai::Benchmarker::AddOutputter(consoleOutputter);
+    hayai::Benchmarker::RunAllTests();
+    return 0;
 }

@@ -37,7 +37,7 @@ static CvHaarClassifierCascade* cascade = 0;
 void detect_and_draw( IplImage* image, IplImage* imgAnterior );
 bool analizarFlujo( IplImage* image, IplImage* imgAnterior, CvRect rect);
 
-const char* cascadeFile ="/home/mrc/ProyectosQt/Guda/utilFiles/haartTraining/profe.xml";
+const char* cascadeFile ="/home/mrc/ProyectosQt/Guda/utilFiles/haartTraining/entrenaPersona.xml";
 const char* aviFile ="/home/mrc/ProyectosQt/Guda/utilFiles/video/ca3.avi";
 
 const int MAX_CORNERS = 100;
@@ -98,7 +98,7 @@ int main(void) {
             }
 
 
-            if( cvWaitKey( 10 ) >= 0 ){
+            if( cvWaitKey( 1 ) >= 0 ){
                 break;
             }
             //copia para trabajar con un solo frame

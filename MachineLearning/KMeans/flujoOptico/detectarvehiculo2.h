@@ -10,7 +10,7 @@ class DetectarVehiculo2 : public QObject
     Q_OBJECT
 public:
     explicit DetectarVehiculo2(QObject *parent = 0);
-    void clasificar(std::vector<cv::Point> matriz);
+    cv::Mat clasificar(std::vector<cv::Point> matriz);
     void comenzar();
     static void actualizarZoom(double zoomUI);
 
