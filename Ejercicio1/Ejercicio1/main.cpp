@@ -1,4 +1,3 @@
-//#include <QCoreApplication>
 #include "cv.h"
 #include "cvaux.h"
 #include "highgui.h"
@@ -11,12 +10,9 @@ int main()
     char name2[] = "/home/mrc/ProyectosQt/Guda/Ejercicio1/Ejercicio1/img/corte.jpg";
     float dx = 0;
     float dy = 0;
-    int detax = 0;
-    int deltay = 0;
     float zoom = 2.01;
     CvRect faceCoords;
     IplImage* imagen = NULL;
-    IplImage* faceImage = NULL;
     imagen = cvLoadImage(name0, 1);
     cvNamedWindow("Fuente", CV_WINDOW_AUTOSIZE);
     cvShowImage("Fuente", imagen);
