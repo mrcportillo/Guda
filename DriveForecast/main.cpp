@@ -131,16 +131,6 @@ class ImageComparation {
 
 };
 
-//int main(){
-//        char frame1[] = "/home/mrc/ProyectosQt/imagenes/2.jpg";
-//        char frame2[] = "/home/mrc/ProyectosQt/imagenes/208.jpg";
-
-//        ImageComparation i;
-//        IplImage* fuente1 = cvLoadImage(frame1, 1);
-//        IplImage* fuente2 = cvLoadImage(frame2, 1);
-//        cout << i.getComparateImage(fuente1, fuente2);
-//}
-
 int main() {
 
     char frame1[] = "/home/mrc/ProyectosQt/imagenes/2.jpg";
@@ -158,11 +148,6 @@ int main() {
 
     Mat resultado = i.cutPieceImage(fuente1, fuente2);
 
-//    vector<int> ar(3);
-//    ar[0] = 1;
-//    ar[1] = 8;
-//    ar[2] = 4;
-//    Mat resultado = i.pasteOver(fuente1, ar, 3, 3);
     cvNamedWindow("Resultado", CV_WINDOW_AUTOSIZE);
     cv::imshow("Resultado", resultado);
 
