@@ -1,0 +1,21 @@
+*******************************************************************************************************************************
+Para usar en el QT seguir las siguientes instrucciones:
+*******************************************************************************************************************************
+
+1° Paso: Ejecutar en una consola:
+
+socat -d -d pty,raw,echo=0 pty,raw,echo=0
+
+Ej de lo que se obtiene: 
+		2016/06/05 18:54:09 socat[3536] N PTY is /dev/pts/9
+		2016/06/05 18:54:09 socat[3536] N PTY is /dev/pts/10
+		2016/06/05 18:54:09 socat[3536] N starting data transfer loop with FDs [3,3] and [5,5]
+
+
+2° paso: Luego configurar en nuestro programa el qExtSerialPort para que escuche a uno de los puertos que me tiró el comando en el 1° paso.
+Ej: port = new QextSerialPort("/dev/pts/9");
+
+3° paso: Abrir el programa Serial Port Terminal y configurar para escuchar el otro puerto que me tiro en el 1° paso.
+Ej: Configurar a /dev/pts/10 en 115200 baudios.
+
+4° paso: Enviar los ASCCI a traves del Serial Port Terminal
